@@ -10,7 +10,6 @@
   <link rel="manifest" href="manifest.json">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       background: #000;
       color: #fff;
@@ -21,171 +20,161 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* ---- Pantalla de configuración ---- */
+    /* ── Config ── */
     #config-screen {
       position: fixed; inset: 0;
       background: #0f0f0f;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 32px;
-      gap: 16px;
-      z-index: 200;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 32px; gap: 16px; z-index: 200;
     }
     #config-screen h1 { font-size: 1.8rem; font-weight: 700; }
-    #config-screen .sub {
-      color: #6b7280;
-      font-size: 0.9rem;
-      text-align: center;
-      line-height: 1.5;
-    }
-    #config-screen a { color: #3b82f6; }
+    .sub { color: #6b7280; font-size: 0.88rem; text-align: center; line-height: 1.5; }
+    .sub a { color: #3b82f6; }
     #api-key-input {
-      width: 100%;
-      padding: 14px 16px;
-      background: #1f2937;
-      border: 1px solid #374151;
-      border-radius: 12px;
-      color: #fff;
-      font-size: 1rem;
-      outline: none;
+      width: 100%; padding: 14px 16px;
+      background: #1f2937; border: 1px solid #374151;
+      border-radius: 12px; color: #fff; font-size: 1rem; outline: none;
     }
     #api-key-input:focus { border-color: #3b82f6; }
     #save-btn {
-      width: 100%;
-      padding: 16px;
-      background: #3b82f6;
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      font-size: 1.05rem;
-      font-weight: 600;
-      cursor: pointer;
+      width: 100%; padding: 16px;
+      background: #3b82f6; color: #fff; border: none;
+      border-radius: 12px; font-size: 1.05rem; font-weight: 600; cursor: pointer;
     }
-    #save-btn:active { background: #2563eb; }
 
-    /* ---- Vista principal ---- */
+    /* ── Main ── */
     #main { display: none; height: 100dvh; position: relative; }
-
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+    video { width: 100%; height: 100%; object-fit: cover; display: block; }
     canvas { display: none; }
 
-    /* Overlay inferior */
+    /* ── Overlay ── */
     #overlay {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      padding: 20px 20px 36px;
-      background: linear-gradient(transparent, rgba(0,0,0,0.88));
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 16px 16px 32px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.92));
     }
 
+    /* Historial de conversación */
+    #history {
+      max-height: 120px; overflow-y: auto;
+      margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .msg { font-size: 0.82rem; line-height: 1.4; padding: 6px 10px; border-radius: 10px; max-width: 90%; }
+    .msg.user { background: #1d4ed8; align-self: flex-end; }
+    .msg.ai   { background: #1f2937; align-self: flex-start; }
+
+    /* Respuesta actual */
     #response-text {
-      font-size: 1.05rem;
-      line-height: 1.55;
-      min-height: 3.5em;
-      margin-bottom: 18px;
+      font-size: 1rem; line-height: 1.55;
+      min-height: 2.5em; margin-bottom: 14px;
       text-shadow: 0 1px 4px rgba(0,0,0,0.9);
     }
 
-    #analyze-btn {
-      width: 100%;
-      padding: 18px;
-      font-size: 1.1rem;
-      font-weight: 700;
-      background: #3b82f6;
-      color: #fff;
-      border: none;
-      border-radius: 16px;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-      letter-spacing: 0.02em;
+    /* Botones */
+    #buttons { display: flex; gap: 10px; }
+    .btn {
+      flex: 1; padding: 16px 10px;
+      font-size: 1rem; font-weight: 700;
+      border: none; border-radius: 14px;
+      cursor: pointer; transition: background 0.15s, transform 0.1s;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
     }
-    #analyze-btn:active { background: #2563eb; transform: scale(0.97); }
-    #analyze-btn:disabled { background: #1f2937; color: #6b7280; transform: none; }
+    .btn:active { transform: scale(0.96); }
+    .btn:disabled { opacity: 0.4; transform: none; }
+    .btn .icon { font-size: 1.5rem; }
+    .btn .label { font-size: 0.75rem; letter-spacing: 0.03em; }
+
+    #btn-analyze { background: #1d4ed8; }
+    #btn-analyze:active { background: #1e40af; }
+
+    #btn-speak { background: #065f46; }
+    #btn-speak:active { background: #064e3b; }
+    #btn-speak.listening { background: #dc2626; animation: pulse-btn 1s infinite; }
+
+    @keyframes pulse-btn {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.7; }
+    }
 
     #status-line {
-      font-size: 0.78rem;
-      color: #9ca3af;
-      text-align: center;
-      margin-top: 10px;
-      min-height: 1em;
+      font-size: 0.78rem; color: #9ca3af;
+      text-align: center; margin-top: 10px; min-height: 1em;
     }
 
-    /* Indicador de grabando */
-    #recording-dot {
-      position: absolute;
-      top: 18px; right: 18px;
-      width: 12px; height: 12px;
-      border-radius: 50%;
-      background: #ef4444;
-      display: none;
-      animation: pulse 1s infinite;
+    /* Indicadores top */
+    #top-bar {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 14px 16px;
+      display: flex; justify-content: space-between; align-items: center;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.2; }
-    }
-
-    /* Botón settings */
     #settings-btn {
-      position: absolute;
-      top: 14px; left: 14px;
-      background: rgba(0,0,0,0.5);
-      border: none;
-      border-radius: 50%;
-      width: 40px; height: 40px;
-      color: #fff;
-      font-size: 1.1rem;
+      background: rgba(0,0,0,0.5); border: none; border-radius: 50%;
+      width: 36px; height: 36px; color: #fff; font-size: 1rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    #clear-btn {
+      background: rgba(0,0,0,0.5); border: none; border-radius: 20px;
+      padding: 6px 12px; color: #9ca3af; font-size: 0.78rem;
       cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
     }
   </style>
 </head>
 <body>
 
-<!-- Pantalla de configuración (primer uso) -->
+<!-- Config -->
 <div id="config-screen">
   <h1>Wearable AI</h1>
-  <p class="sub">
-    Necesitas una API key gratuita de Google Gemini.<br>
-    Obtenla en <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a>
-  </p>
-  <input id="api-key-input" type="password" placeholder="Pega tu API key aquí (AIza...)" autocomplete="off" />
+  <p class="sub">Ingresa tu API key gratuita de Google Gemini.</p>
+  <p class="sub" style="font-size:0.75rem">Obtenla en <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a></p>
+  <input id="api-key-input" type="password" placeholder="Pega tu API key aquí..." autocomplete="off"/>
   <button id="save-btn" onclick="saveKey()">Guardar y comenzar</button>
-  <p class="sub" style="font-size:0.75rem">
-    La key se guarda solo en tu teléfono, no se comparte con nadie.
-  </p>
+  <p class="sub" style="font-size:0.72rem">La key se guarda solo en tu teléfono.</p>
 </div>
 
-<!-- Vista principal -->
+<!-- Main -->
 <div id="main">
   <video id="camera" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
-  <div id="recording-dot"></div>
-  <button id="settings-btn" onclick="resetKey()" title="Cambiar API key">⚙️</button>
+
+  <div id="top-bar">
+    <button id="settings-btn" onclick="resetKey()">⚙️</button>
+    <button id="clear-btn" onclick="clearHistory()">Limpiar conversación</button>
+  </div>
+
   <div id="overlay">
-    <div id="response-text">Apunta la cámara y pulsa Analizar.</div>
-    <button id="analyze-btn" onclick="analyze()">Analizar</button>
+    <div id="history"></div>
+    <div id="response-text">Listo. Pulsa Ver o Hablar.</div>
+    <div id="buttons">
+      <button class="btn" id="btn-analyze" onclick="doAnalyze()">
+        <span class="icon">👁</span>
+        <span class="label">VER</span>
+      </button>
+      <button class="btn" id="btn-speak" onclick="doSpeak()">
+        <span class="icon">🎤</span>
+        <span class="label">HABLAR</span>
+      </button>
+    </div>
     <div id="status-line"></div>
   </div>
 </div>
 
 <script>
   const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent';
-  const PROMPT = 'Eres un asistente wearable. Describe brevemente en español lo que ves en 2-3 oraciones cortas y útiles. Sé directo y conciso.';
+  const SYSTEM_PROMPT = 'Eres un asistente wearable inteligente. Puedes ver lo que ve la cámara del usuario. Responde siempre en español de forma breve y útil (máximo 3 oraciones). Si el usuario hace una pregunta, respóndela directamente usando lo que ves en la imagen.';
 
-  // ---- API Key ----
+  // ── Historial de conversación ──
+  let history = [];
+
+  function clearHistory() {
+    history = [];
+    document.getElementById('history').innerHTML = '';
+    setResponse('Conversación reiniciada.');
+  }
+
+  // ── Config ──
   function saveKey() {
     const key = document.getElementById('api-key-input').value.trim();
-    if (key.length < 10) {
-      alert('La API key parece muy corta. Verifica que la copiaste completa.');
-      return;
-    }
+    if (key.length < 10) { alert('API key muy corta.'); return; }
     localStorage.setItem('gemini_key', key);
     document.getElementById('config-screen').style.display = 'none';
     document.getElementById('main').style.display = 'block';
@@ -193,113 +182,179 @@
   }
 
   function resetKey() {
-    if (confirm('¿Cambiar la API key?')) {
-      localStorage.removeItem('gemini_key');
-      location.reload();
-    }
+    if (confirm('¿Cambiar la API key?')) { localStorage.removeItem('gemini_key'); location.reload(); }
   }
 
-  // ---- Cámara ----
+  // ── Cámara ──
   const video = document.getElementById('camera');
   const canvas = document.getElementById('canvas');
 
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 } },
-        audio: false,
+        video: { facingMode: 'environment' }, audio: false
       });
       video.srcObject = stream;
-    } catch (e) {
-      setStatus('Sin acceso a cámara: ' + e.message);
-    }
+    } catch (e) { setStatus('Sin acceso a cámara: ' + e.message); }
   }
 
   function captureFrame() {
-    const w = video.videoWidth || 640;
-    const h = video.videoHeight || 480;
-    // Reducir a max 800px de ancho para agilizar la subida
-    const maxW = 480;
-    const scale = w > maxW ? maxW / w : 1;
-    canvas.width  = Math.round(w * scale);
+    const w = video.videoWidth || 640, h = video.videoHeight || 480;
+    const maxW = 480, scale = w > maxW ? maxW / w : 1;
+    canvas.width = Math.round(w * scale);
     canvas.height = Math.round(h * scale);
     canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
   }
 
-  // ---- Gemini API ----
-  async function callGemini(imageB64) {
+  // ── Gemini API ──
+  async function callGemini(userText, imageB64) {
     const key = localStorage.getItem('gemini_key');
+
+    // Construir contenido del mensaje actual
+    const currentParts = [];
+    if (userText) currentParts.push({ text: userText });
+    if (imageB64) currentParts.push({ inline_data: { mime_type: 'image/jpeg', data: imageB64 } });
+
+    // Construir historial (solo texto, sin imágenes previas para ahorrar tokens)
+    const contents = [
+      ...history.map(h => ({ role: h.role, parts: [{ text: h.text }] })),
+      { role: 'user', parts: currentParts }
+    ];
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90000);
+
     try {
       const res = await fetch(`${GEMINI_URL}?key=${key}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         signal: controller.signal,
         body: JSON.stringify({
-          contents: [{ parts: [
-            { text: PROMPT },
-            { inline_data: { mime_type: 'image/jpeg', data: imageB64 } }
-          ]}],
-          generationConfig: { maxOutputTokens: 200 }
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents,
+          generationConfig: { maxOutputTokens: 250, temperature: 0.7 }
         })
       });
       clearTimeout(timeout);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error('Sin respuesta del modelo. Intenta de nuevo.');
+      if (!text) throw new Error('Sin respuesta del modelo.');
+
+      // Guardar en historial
+      history.push({ role: 'user', text: userText || '[imagen]' });
+      history.push({ role: 'model', text });
+      // Limitar historial a últimas 6 entradas (3 turnos)
+      if (history.length > 6) history = history.slice(-6);
+
       return text;
     } catch (e) {
       clearTimeout(timeout);
-      if (e.name === 'AbortError') throw new Error('Timeout 90s — red lenta o modelo no disponible');
+      if (e.name === 'AbortError') throw new Error('Tiempo agotado. Verifica tu conexión.');
       throw e;
     }
   }
 
-  // ---- Voz ----
+  // ── TTS ──
   function speak(text) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = 'es-ES';
-    utt.rate = 1.05;
-    utt.pitch = 1;
+    utt.lang = 'es-ES'; utt.rate = 1.05;
     window.speechSynthesis.speak(utt);
   }
 
-  // ---- Flujo principal ----
-  const btn = document.getElementById('analyze-btn');
-  const responseDiv = document.getElementById('response-text');
-  const dot = document.getElementById('recording-dot');
+  // ── Speech Recognition ──
+  function listenForSpeech() {
+    return new Promise((resolve, reject) => {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { reject(new Error('Tu navegador no soporta reconocimiento de voz.')); return; }
+      const rec = new SR();
+      rec.lang = 'es-ES';
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onresult = e => resolve(e.results[0][0].transcript);
+      rec.onerror = e => reject(new Error('Error de micrófono: ' + e.error));
+      rec.onend = () => {};
+      rec.start();
+    });
+  }
 
+  // ── UI helpers ──
+  function setResponse(text) {
+    document.getElementById('response-text').textContent = text;
+  }
   function setStatus(msg) {
     document.getElementById('status-line').textContent = msg;
   }
+  function addToHistory(role, text) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+    div.textContent = text;
+    const histDiv = document.getElementById('history');
+    histDiv.appendChild(div);
+    histDiv.scrollTop = histDiv.scrollHeight;
+  }
+  function setBusy(busy) {
+    document.getElementById('btn-analyze').disabled = busy;
+    document.getElementById('btn-speak').disabled = busy;
+  }
 
-  async function analyze() {
-    btn.disabled = true;
-    btn.textContent = 'Analizando...';
-    dot.style.display = 'block';
-    setStatus('');
+  // ── Modo 1: Ver ──
+  async function doAnalyze() {
+    setBusy(true);
+    setStatus('Analizando...');
     try {
       const imageB64 = captureFrame();
-      const text = await callGemini(imageB64);
-      responseDiv.textContent = text;
+      const text = await callGemini('¿Qué ves?', imageB64);
+      setResponse(text);
+      addToHistory('ai', text);
       speak(text);
+      setStatus('');
     } catch (e) {
-      const msg = '⚠ ' + e.message;
-      responseDiv.textContent = msg;
-      setStatus(msg);
+      setResponse('⚠ ' + e.message);
+      setStatus('');
     } finally {
-      btn.disabled = false;
-      btn.textContent = 'Analizar';
-      dot.style.display = 'none';
+      setBusy(false);
     }
   }
 
-  // ---- Init ----
+  // ── Modo 2: Hablar ──
+  async function doSpeak() {
+    const btn = document.getElementById('btn-speak');
+    setBusy(true);
+    btn.classList.add('listening');
+    btn.querySelector('.label').textContent = 'ESCUCHANDO';
+    btn.querySelector('.icon').textContent = '🔴';
+    setStatus('Habla ahora...');
+
+    try {
+      const question = await listenForSpeech();
+      addToHistory('user', question);
+      setStatus('Pensando...');
+      btn.classList.remove('listening');
+      btn.querySelector('.label').textContent = 'HABLAR';
+      btn.querySelector('.icon').textContent = '🎤';
+
+      const imageB64 = captureFrame();
+      const text = await callGemini(question, imageB64);
+      setResponse(text);
+      addToHistory('ai', text);
+      speak(text);
+      setStatus('');
+    } catch (e) {
+      btn.classList.remove('listening');
+      btn.querySelector('.label').textContent = 'HABLAR';
+      btn.querySelector('.icon').textContent = '🎤';
+      setResponse('⚠ ' + e.message);
+      setStatus('');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // ── Init ──
   if (localStorage.getItem('gemini_key')) {
     document.getElementById('config-screen').style.display = 'none';
     document.getElementById('main').style.display = 'block';
