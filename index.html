@@ -176,7 +176,7 @@
 </div>
 
 <script>
-  const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent';
+  const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent';
   const PROMPT = 'Eres un asistente wearable. Describe brevemente en español lo que ves en 2-3 oraciones cortas y útiles. Sé directo y conciso.';
 
   // ---- API Key ----
@@ -219,12 +219,12 @@
     const w = video.videoWidth || 640;
     const h = video.videoHeight || 480;
     // Reducir a max 800px de ancho para agilizar la subida
-    const maxW = 800;
+    const maxW = 480;
     const scale = w > maxW ? maxW / w : 1;
     canvas.width  = Math.round(w * scale);
     canvas.height = Math.round(h * scale);
     canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.75).split(',')[1];
+    return canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
   }
 
   // ---- Gemini API ----
