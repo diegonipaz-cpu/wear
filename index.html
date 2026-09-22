@@ -11,36 +11,30 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #000;
-      color: #fff;
+      background: #000; color: #fff;
       font-family: system-ui, -apple-system, sans-serif;
-      height: 100dvh;
-      overflow: hidden;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
+      height: 100dvh; overflow: hidden;
+      user-select: none; -webkit-tap-highlight-color: transparent;
     }
 
     /* ── Config ── */
     #config-screen {
-      position: fixed; inset: 0;
-      background: #0f0f0f;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 32px; gap: 16px; z-index: 200;
+      position: fixed; inset: 0; background: #0f0f0f;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 32px; gap: 16px; z-index: 300;
     }
     #config-screen h1 { font-size: 1.8rem; font-weight: 700; }
     .sub { color: #6b7280; font-size: 0.88rem; text-align: center; line-height: 1.5; }
     .sub a { color: #3b82f6; }
     #api-key-input {
-      width: 100%; padding: 14px 16px;
-      background: #1f2937; border: 1px solid #374151;
-      border-radius: 12px; color: #fff; font-size: 1rem; outline: none;
+      width: 100%; padding: 14px 16px; background: #1f2937;
+      border: 1px solid #374151; border-radius: 12px; color: #fff;
+      font-size: 1rem; outline: none;
     }
     #api-key-input:focus { border-color: #3b82f6; }
     #save-btn {
-      width: 100%; padding: 16px;
-      background: #3b82f6; color: #fff; border: none;
-      border-radius: 12px; font-size: 1.05rem; font-weight: 600; cursor: pointer;
+      width: 100%; padding: 16px; background: #3b82f6; color: #fff;
+      border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 600; cursor: pointer;
     }
 
     /* ── Main ── */
@@ -48,75 +42,103 @@
     video { width: 100%; height: 100%; object-fit: cover; display: block; }
     canvas { display: none; }
 
+    /* ── Top bar ── */
+    #top-bar {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .top-btn {
+      background: rgba(0,0,0,0.55); border: none; border-radius: 20px;
+      padding: 6px 12px; color: #ccc; font-size: 0.8rem; cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .top-btn.active { background: rgba(59,130,246,0.7); color: #fff; }
+    .top-btn.icon-only { border-radius: 50%; width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 1rem; }
+
     /* ── Overlay ── */
     #overlay {
       position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 16px 16px 32px;
-      background: linear-gradient(transparent, rgba(0,0,0,0.92));
+      padding: 12px 14px 30px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.93));
     }
 
-    /* Historial de conversación */
-    #history {
-      max-height: 120px; overflow-y: auto;
-      margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px;
-    }
-    .msg { font-size: 0.82rem; line-height: 1.4; padding: 6px 10px; border-radius: 10px; max-width: 90%; }
+    /* History */
+    #history { max-height: 100px; overflow-y: auto; margin-bottom: 8px; display: flex; flex-direction: column; gap: 5px; }
+    .msg { font-size: 0.8rem; line-height: 1.4; padding: 5px 10px; border-radius: 10px; max-width: 88%; }
     .msg.user { background: #1d4ed8; align-self: flex-end; }
     .msg.ai   { background: #1f2937; align-self: flex-start; }
 
-    /* Respuesta actual */
-    #response-text {
-      font-size: 1rem; line-height: 1.55;
-      min-height: 2.5em; margin-bottom: 14px;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    /* Response */
+    #response-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 10px; }
+    #response-text { flex: 1; font-size: 0.97rem; line-height: 1.55; min-height: 2.4em; text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+    #copy-btn {
+      background: rgba(255,255,255,0.1); border: none; border-radius: 8px;
+      padding: 6px 8px; color: #9ca3af; font-size: 1rem; cursor: pointer; flex-shrink: 0;
     }
+    #copy-btn:active { background: rgba(255,255,255,0.25); }
 
-    /* Botones */
+    /* Mode chips */
+    #modes {
+      display: flex; gap: 7px; overflow-x: auto; margin-bottom: 10px;
+      scrollbar-width: none; padding-bottom: 2px;
+    }
+    #modes::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0; padding: 6px 12px; border-radius: 20px; border: none;
+      background: rgba(255,255,255,0.1); color: #ccc; font-size: 0.82rem;
+      cursor: pointer; transition: background 0.15s;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .chip.active { background: #3b82f6; color: #fff; }
+    .chip:active { opacity: 0.75; }
+
+    /* Action buttons */
     #buttons { display: flex; gap: 10px; }
-    .btn {
-      flex: 1; padding: 16px 10px;
-      font-size: 1rem; font-weight: 700;
-      border: none; border-radius: 14px;
+    .action-btn {
+      flex: 1; padding: 15px 8px; border: none; border-radius: 14px;
       cursor: pointer; transition: background 0.15s, transform 0.1s;
-      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      font-weight: 700;
     }
-    .btn:active { transform: scale(0.96); }
-    .btn:disabled { opacity: 0.4; transform: none; }
-    .btn .icon { font-size: 1.5rem; }
-    .btn .label { font-size: 0.75rem; letter-spacing: 0.03em; }
+    .action-btn:active { transform: scale(0.96); }
+    .action-btn:disabled { opacity: 0.35; transform: none; }
+    .action-btn .icon { font-size: 1.4rem; }
+    .action-btn .label { font-size: 0.72rem; letter-spacing: 0.03em; }
 
-    #btn-analyze { background: #1d4ed8; }
-    #btn-analyze:active { background: #1e40af; }
+    #btn-analyze { background: #1e3a8a; }
+    #btn-speak   { background: #065f46; }
+    #btn-speak.listening { background: #dc2626; animation: blink 1s infinite; }
+    #btn-continuous { background: #1f2937; flex: 0.7; }
+    #btn-continuous.active { background: #7c3aed; }
 
-    #btn-speak { background: #065f46; }
-    #btn-speak:active { background: #064e3b; }
-    #btn-speak.listening { background: #dc2626; animation: pulse-btn 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.6} }
 
-    @keyframes pulse-btn {
-      0%, 100% { opacity: 1; } 50% { opacity: 0.7; }
-    }
+    #status-line { font-size: 0.76rem; color: #9ca3af; text-align: center; margin-top: 8px; min-height: 1em; }
 
-    #status-line {
-      font-size: 0.78rem; color: #9ca3af;
-      text-align: center; margin-top: 10px; min-height: 1em;
+    /* ── Reminders panel ── */
+    #reminders-panel {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+      flex-direction: column; z-index: 200; padding: 20px;
     }
-
-    /* Indicadores top */
-    #top-bar {
-      position: absolute; top: 0; left: 0; right: 0;
-      padding: 14px 16px;
-      display: flex; justify-content: space-between; align-items: center;
+    #reminders-panel.open { display: flex; }
+    #reminders-panel h2 { font-size: 1.2rem; margin-bottom: 14px; }
+    #reminders-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .reminder-item {
+      background: #1f2937; border-radius: 12px; padding: 12px;
+      display: flex; flex-direction: column; gap: 4px;
     }
-    #settings-btn {
-      background: rgba(0,0,0,0.5); border: none; border-radius: 50%;
-      width: 36px; height: 36px; color: #fff; font-size: 1rem;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    .reminder-item .r-time { font-size: 0.72rem; color: #6b7280; }
+    .reminder-item .r-text { font-size: 0.9rem; line-height: 1.4; }
+    .reminder-item .r-del {
+      align-self: flex-end; background: none; border: none;
+      color: #ef4444; font-size: 0.8rem; cursor: pointer; margin-top: 4px;
     }
-    #clear-btn {
-      background: rgba(0,0,0,0.5); border: none; border-radius: 20px;
-      padding: 6px 12px; color: #9ca3af; font-size: 0.78rem;
-      cursor: pointer;
+    #close-reminders {
+      margin-top: 16px; padding: 14px; background: #374151;
+      border: none; border-radius: 12px; color: #fff;
+      font-size: 1rem; cursor: pointer;
     }
+    #no-reminders { color: #6b7280; text-align: center; margin-top: 40px; }
   </style>
 </head>
 <body>
@@ -125,10 +147,18 @@
 <div id="config-screen">
   <h1>Wearable AI</h1>
   <p class="sub">Ingresa tu API key gratuita de Google Gemini.</p>
-  <p class="sub" style="font-size:0.75rem">Obtenla en <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a></p>
+  <p class="sub" style="font-size:.75rem">Obtenla en <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a></p>
   <input id="api-key-input" type="password" placeholder="Pega tu API key aquí..." autocomplete="off"/>
   <button id="save-btn" onclick="saveKey()">Guardar y comenzar</button>
-  <p class="sub" style="font-size:0.72rem">La key se guarda solo en tu teléfono.</p>
+  <p class="sub" style="font-size:.72rem">La key se guarda solo en tu teléfono.</p>
+</div>
+
+<!-- Reminders panel -->
+<div id="reminders-panel">
+  <h2>📌 Recordatorios</h2>
+  <div id="reminders-list"></div>
+  <p id="no-reminders" style="display:none">No hay recordatorios guardados.</p>
+  <button id="close-reminders" onclick="closeReminders()">Cerrar</button>
 </div>
 
 <!-- Main -->
@@ -136,22 +166,43 @@
   <video id="camera" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
 
+  <!-- Top bar -->
   <div id="top-bar">
-    <button id="settings-btn" onclick="resetKey()">⚙️</button>
-    <button id="clear-btn" onclick="clearHistory()">Limpiar conversación</button>
+    <button class="top-btn icon-only" onclick="resetKey()" title="Configuración">⚙️</button>
+    <div style="display:flex;gap:8px">
+      <button class="top-btn" id="btn-wake" onclick="toggleWakeLock()">🔆 Pantalla</button>
+      <button class="top-btn" onclick="openReminders()">📌 Notas</button>
+      <button class="top-btn icon-only" onclick="clearHistory()" title="Limpiar">🗑</button>
+    </div>
   </div>
 
   <div id="overlay">
     <div id="history"></div>
-    <div id="response-text">Listo. Pulsa Ver o Hablar.</div>
+    <div id="response-row">
+      <div id="response-text">Selecciona un modo y analiza.</div>
+      <button id="copy-btn" onclick="copyResponse()" title="Copiar">📋</button>
+    </div>
+
+    <!-- Mode chips -->
+    <div id="modes">
+      <button class="chip active" data-mode="general"  onclick="selectMode('general')">👁 Ver</button>
+      <button class="chip"        data-mode="leer"     onclick="selectMode('leer')">📖 Leer</button>
+      <button class="chip"        data-mode="precio"   onclick="selectMode('precio')">🛍 Precio</button>
+      <button class="chip"        data-mode="traducir" onclick="selectMode('traducir')">🌐 Traducir</button>
+      <button class="chip"        data-mode="persona"  onclick="selectMode('persona')">👤 Persona</button>
+      <button class="chip"        data-mode="recordar" onclick="selectMode('recordar')">📌 Guardar</button>
+    </div>
+
+    <!-- Action buttons -->
     <div id="buttons">
-      <button class="btn" id="btn-analyze" onclick="doAnalyze()">
-        <span class="icon">👁</span>
-        <span class="label">VER</span>
+      <button class="action-btn" id="btn-analyze" onclick="doAnalyze()">
+        <span class="icon">📸</span><span class="label">ANALIZAR</span>
       </button>
-      <button class="btn" id="btn-speak" onclick="doSpeak()">
-        <span class="icon">🎤</span>
-        <span class="label">HABLAR</span>
+      <button class="action-btn" id="btn-speak" onclick="doSpeak()">
+        <span class="icon">🎤</span><span class="label">HABLAR</span>
+      </button>
+      <button class="action-btn" id="btn-continuous" onclick="toggleContinuous()">
+        <span class="icon">🔁</span><span class="label">AUTO</span>
       </button>
     </div>
     <div id="status-line"></div>
@@ -160,16 +211,23 @@
 
 <script>
   const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent';
-  const SYSTEM_PROMPT = 'Eres un asistente wearable inteligente. Puedes ver lo que ve la cámara del usuario. Responde siempre en español de forma breve y útil (máximo 3 oraciones). Si el usuario hace una pregunta, respóndela directamente usando lo que ves en la imagen.';
+  const SYSTEM_PROMPT = 'Eres un asistente wearable. Ves lo que ve la cámara del usuario. Responde siempre en español, de forma breve y útil (máximo 3 oraciones).';
 
-  // ── Historial de conversación ──
+  const MODES = {
+    general:  { label: 'Ver',     prompt: '¿Qué ves? Describe brevemente el entorno en 2-3 oraciones.' },
+    leer:     { label: 'Leer',    prompt: 'Lee y transcribe exactamente todo el texto visible en la imagen.' },
+    precio:   { label: 'Precio',  prompt: 'Identifica el producto. Si hay precio visible, dímelo. Da marca, modelo e información relevante.' },
+    traducir: { label: 'Traducir',prompt: 'Traduce al español todo el texto de la imagen. Si ya está en español, tradúcelo al inglés.' },
+    persona:  { label: 'Persona', prompt: 'Describe a la persona o personas: ropa, expresión facial, postura, edad aproximada y contexto.' },
+    recordar: { label: 'Guardar', prompt: 'Describe detalladamente lo que ves para guardarlo como recordatorio. Sé específico.' },
+  };
+
+  let currentMode = 'general';
   let history = [];
-
-  function clearHistory() {
-    history = [];
-    document.getElementById('history').innerHTML = '';
-    setResponse('Conversación reiniciada.');
-  }
+  let continuousTimer = null;
+  let continuousCount = 0;
+  let wakeLock = null;
+  let busy = false;
 
   // ── Config ──
   function saveKey() {
@@ -180,7 +238,6 @@
     document.getElementById('main').style.display = 'block';
     startCamera();
   }
-
   function resetKey() {
     if (confirm('¿Cambiar la API key?')) { localStorage.removeItem('gemini_key'); location.reload(); }
   }
@@ -191,11 +248,9 @@
 
   async function startCamera() {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }, audio: false
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
       video.srcObject = stream;
-    } catch (e) { setStatus('Sin acceso a cámara: ' + e.message); }
+    } catch (e) { setStatus('Sin cámara: ' + e.message); }
   }
 
   function captureFrame() {
@@ -207,24 +262,20 @@
     return canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
   }
 
-  // ── Gemini API ──
-  async function callGemini(userText, imageB64) {
+  // ── Gemini ──
+  async function callGemini(userText, imageB64, useHistory = true) {
     const key = localStorage.getItem('gemini_key');
-
-    // Construir contenido del mensaje actual
     const currentParts = [];
     if (userText) currentParts.push({ text: userText });
     if (imageB64) currentParts.push({ inline_data: { mime_type: 'image/jpeg', data: imageB64 } });
 
-    // Construir historial (solo texto, sin imágenes previas para ahorrar tokens)
     const contents = [
-      ...history.map(h => ({ role: h.role, parts: [{ text: h.text }] })),
+      ...(useHistory ? history.map(h => ({ role: h.role, parts: [{ text: h.text }] })) : []),
       { role: 'user', parts: currentParts }
     ];
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90000);
-
     try {
       const res = await fetch(`${GEMINI_URL}?key=${key}`, {
         method: 'POST',
@@ -241,13 +292,6 @@
       if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!text) throw new Error('Sin respuesta del modelo.');
-
-      // Guardar en historial
-      history.push({ role: 'user', text: userText || '[imagen]' });
-      history.push({ role: 'model', text });
-      // Limitar historial a últimas 6 entradas (3 turnos)
-      if (history.length > 6) history = history.slice(-6);
-
       return text;
     } catch (e) {
       clearTimeout(timeout);
@@ -269,89 +313,197 @@
   function listenForSpeech() {
     return new Promise((resolve, reject) => {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) { reject(new Error('Tu navegador no soporta reconocimiento de voz.')); return; }
+      if (!SR) { reject(new Error('Reconocimiento de voz no disponible.')); return; }
       const rec = new SR();
-      rec.lang = 'es-ES';
-      rec.interimResults = false;
-      rec.maxAlternatives = 1;
+      rec.lang = 'es-ES'; rec.interimResults = false;
       rec.onresult = e => resolve(e.results[0][0].transcript);
-      rec.onerror = e => reject(new Error('Error de micrófono: ' + e.error));
-      rec.onend = () => {};
+      rec.onerror = e => reject(new Error('Mic: ' + e.error));
       rec.start();
     });
   }
 
-  // ── UI helpers ──
-  function setResponse(text) {
-    document.getElementById('response-text').textContent = text;
-  }
-  function setStatus(msg) {
-    document.getElementById('status-line').textContent = msg;
-  }
-  function addToHistory(role, text) {
-    const div = document.createElement('div');
-    div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
-    div.textContent = text;
-    const histDiv = document.getElementById('history');
-    histDiv.appendChild(div);
-    histDiv.scrollTop = histDiv.scrollHeight;
-  }
-  function setBusy(busy) {
-    document.getElementById('btn-analyze').disabled = busy;
-    document.getElementById('btn-speak').disabled = busy;
+  // ── Vibración ──
+  function vibrate() { navigator.vibrate && navigator.vibrate([80, 40, 80]); }
+
+  // ── Copiar ──
+  async function copyResponse() {
+    const text = document.getElementById('response-text').textContent;
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatus('Copiado al portapapeles');
+      setTimeout(() => setStatus(''), 2000);
+    } catch { setStatus('No se pudo copiar'); }
   }
 
-  // ── Modo 1: Ver ──
-  async function doAnalyze() {
-    setBusy(true);
-    setStatus('Analizando...');
+  // ── Wake Lock ──
+  async function toggleWakeLock() {
+    const btn = document.getElementById('btn-wake');
     try {
-      const imageB64 = captureFrame();
-      const text = await callGemini('¿Qué ves?', imageB64);
-      setResponse(text);
-      addToHistory('ai', text);
-      speak(text);
+      if (wakeLock) {
+        await wakeLock.release(); wakeLock = null;
+        btn.classList.remove('active'); btn.textContent = '🔆 Pantalla';
+      } else {
+        wakeLock = await navigator.wakeLock.request('screen');
+        btn.classList.add('active'); btn.textContent = '🔆 Activa';
+        wakeLock.addEventListener('release', () => { wakeLock = null; btn.classList.remove('active'); btn.textContent = '🔆 Pantalla'; });
+      }
+    } catch (e) { setStatus('Wake Lock no disponible'); }
+  }
+
+  // ── Modo continuo ──
+  const CONTINUOUS_INTERVAL = 12000; // 12 segundos
+
+  function toggleContinuous() {
+    const btn = document.getElementById('btn-continuous');
+    if (continuousTimer) {
+      clearInterval(continuousTimer); clearInterval(countdownTimer);
+      continuousTimer = null; countdownTimer = null;
+      btn.classList.remove('active');
+      btn.querySelector('.label').textContent = 'AUTO';
       setStatus('');
-    } catch (e) {
-      setResponse('⚠ ' + e.message);
-      setStatus('');
-    } finally {
-      setBusy(false);
+    } else {
+      btn.classList.add('active');
+      doAnalyze(); // análisis inmediato
+      startCountdown();
+      continuousTimer = setInterval(() => { doAnalyze(); startCountdown(); }, CONTINUOUS_INTERVAL);
     }
   }
 
-  // ── Modo 2: Hablar ──
+  let countdownTimer = null;
+  function startCountdown() {
+    let secs = CONTINUOUS_INTERVAL / 1000;
+    const btn = document.getElementById('btn-continuous');
+    btn.querySelector('.label').textContent = `${secs}s`;
+    countdownTimer = setInterval(() => {
+      secs--;
+      if (secs > 0) btn.querySelector('.label').textContent = `${secs}s`;
+      else { clearInterval(countdownTimer); btn.querySelector('.label').textContent = 'AUTO'; }
+    }, 1000);
+  }
+
+  // ── Modos ──
+  function selectMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.mode === mode));
+  }
+
+  // ── Analizar ──
+  async function doAnalyze() {
+    if (busy) return;
+    busy = true; setBusy(true);
+    setStatus('Analizando...');
+    try {
+      const imageB64 = captureFrame();
+      const prompt = MODES[currentMode].prompt;
+      const text = await callGemini(prompt, imageB64, false); // sin historial para análisis puntual
+      setResponse(text);
+      speak(text); vibrate();
+      if (currentMode === 'recordar') saveReminder(text);
+      else addMsgToHistory('ai', text);
+      setStatus('');
+    } catch (e) {
+      setResponse('⚠ ' + e.message); setStatus('');
+    } finally {
+      busy = false; setBusy(false);
+    }
+  }
+
+  // ── Hablar ──
   async function doSpeak() {
+    if (busy) return;
+    busy = true;
     const btn = document.getElementById('btn-speak');
-    setBusy(true);
+    setBusy(true); btn.disabled = false; // mantener hablar activo
     btn.classList.add('listening');
-    btn.querySelector('.label').textContent = 'ESCUCHANDO';
+    btn.querySelector('.label').textContent = 'OYE...';
     btn.querySelector('.icon').textContent = '🔴';
     setStatus('Habla ahora...');
-
     try {
       const question = await listenForSpeech();
-      addToHistory('user', question);
+      addMsgToHistory('user', question);
       setStatus('Pensando...');
       btn.classList.remove('listening');
       btn.querySelector('.label').textContent = 'HABLAR';
       btn.querySelector('.icon').textContent = '🎤';
 
       const imageB64 = captureFrame();
-      const text = await callGemini(question, imageB64);
+      const text = await callGemini(question, imageB64, true);
       setResponse(text);
-      addToHistory('ai', text);
-      speak(text);
+      addMsgToHistory('model', text);
+      if (history.length > 6) history = history.slice(-6);
+      speak(text); vibrate();
       setStatus('');
     } catch (e) {
       btn.classList.remove('listening');
       btn.querySelector('.label').textContent = 'HABLAR';
       btn.querySelector('.icon').textContent = '🎤';
-      setResponse('⚠ ' + e.message);
-      setStatus('');
+      setResponse('⚠ ' + e.message); setStatus('');
     } finally {
-      setBusy(false);
+      busy = false; setBusy(false);
     }
+  }
+
+  // ── Recordatorios ──
+  function saveReminder(text) {
+    const reminders = JSON.parse(localStorage.getItem('reminders') || '[]');
+    reminders.unshift({ text, time: new Date().toLocaleString('es') });
+    localStorage.setItem('reminders', JSON.stringify(reminders.slice(0, 50)));
+    speak('Guardado en recordatorios.');
+    setStatus('📌 Guardado');
+    setTimeout(() => setStatus(''), 2000);
+  }
+
+  function openReminders() {
+    const reminders = JSON.parse(localStorage.getItem('reminders') || '[]');
+    const list = document.getElementById('reminders-list');
+    const noMsg = document.getElementById('no-reminders');
+    list.innerHTML = '';
+    if (reminders.length === 0) { noMsg.style.display = 'block'; }
+    else {
+      noMsg.style.display = 'none';
+      reminders.forEach((r, i) => {
+        const div = document.createElement('div');
+        div.className = 'reminder-item';
+        div.innerHTML = `<span class="r-time">${r.time}</span><span class="r-text">${r.text}</span><button class="r-del" onclick="deleteReminder(${i})">Eliminar</button>`;
+        list.appendChild(div);
+      });
+    }
+    document.getElementById('reminders-panel').classList.add('open');
+  }
+
+  function deleteReminder(i) {
+    const reminders = JSON.parse(localStorage.getItem('reminders') || '[]');
+    reminders.splice(i, 1);
+    localStorage.setItem('reminders', JSON.stringify(reminders));
+    openReminders();
+  }
+
+  function closeReminders() {
+    document.getElementById('reminders-panel').classList.remove('open');
+  }
+
+  // ── UI helpers ──
+  function setResponse(text) { document.getElementById('response-text').textContent = text; }
+  function setStatus(msg) { document.getElementById('status-line').textContent = msg; }
+
+  function addMsgToHistory(role, text) {
+    history.push({ role, text });
+    const div = document.createElement('div');
+    div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+    div.textContent = text.length > 80 ? text.slice(0, 80) + '…' : text;
+    const h = document.getElementById('history');
+    h.appendChild(div); h.scrollTop = h.scrollHeight;
+  }
+
+  function clearHistory() {
+    history = [];
+    document.getElementById('history').innerHTML = '';
+    setResponse('Conversación reiniciada.');
+  }
+
+  function setBusy(b) {
+    document.getElementById('btn-analyze').disabled = b;
+    document.getElementById('btn-continuous').disabled = b;
   }
 
   // ── Init ──
