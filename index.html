@@ -182,8 +182,8 @@
   // ---- API Key ----
   function saveKey() {
     const key = document.getElementById('api-key-input').value.trim();
-    if (!key.startsWith('AIza')) {
-      alert('La API key no parece válida. Debe empezar con "AIza..."');
+    if (key.length < 10) {
+      alert('La API key parece muy corta. Verifica que la copiaste completa.');
       return;
     }
     localStorage.setItem('gemini_key', key);
