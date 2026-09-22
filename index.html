@@ -230,25 +230,32 @@
   // ---- Gemini API ----
   async function callGemini(imageB64) {
     const key = localStorage.getItem('gemini_key');
-    const res = await fetch(`${GEMINI_URL}?key=${key}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [
-            { text: PROMPT },
-            { inline_data: { mime_type: 'image/jpeg', data: imageB64 } }
-          ]
-        }],
-        generationConfig: { maxOutputTokens: 200, temperature: 0.4 }
-      })
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    try {
+      const res = await fetch(`${GEMINI_URL}?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: PROMPT },
+              { inline_data: { mime_type: 'image/jpeg', data: imageB64 } }
+            ]
+          }],
+          generationConfig: { maxOutputTokens: 200, temperature: 0.4 }
+        })
+      });
+      clearTimeout(timeout);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '(sin respuesta)';
+    } catch (e) {
+      clearTimeout(timeout);
+      if (e.name === 'AbortError') throw new Error('Tiempo agotado (30s). Verifica tu conexión.');
+      throw e;
     }
-    const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '(sin respuesta)';
   }
 
   // ---- Voz ----
