@@ -176,7 +176,7 @@
 </div>
 
 <script>
-  const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-3.6-flash:generateContent';
+  const GEMINI_MODEL = 'gemini-3.6-flash';
   const PROMPT = 'Eres un asistente wearable. Describe brevemente en español lo que ves en 2-3 oraciones cortas y útiles. Sé directo y conciso.';
 
   // ---- API Key ----
@@ -227,37 +227,17 @@
     return canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
   }
 
-  // ---- Gemini API ----
+  // ---- Gemini SDK (soporta keys AQ. y AIza) ----
   async function callGemini(imageB64) {
     const key = localStorage.getItem('gemini_key');
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
-    try {
-      const res = await fetch(`${GEMINI_URL}?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: controller.signal,
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: PROMPT },
-              { inline_data: { mime_type: 'image/jpeg', data: imageB64 } }
-            ]
-          }],
-          generationConfig: { maxOutputTokens: 200, temperature: 0.4 }
-        })
-      });
-      clearTimeout(timeout);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error('DEBUG: ' + JSON.stringify(data).slice(0, 300));
-      return text;
-    } catch (e) {
-      clearTimeout(timeout);
-      if (e.name === 'AbortError') throw new Error('Tiempo agotado (30s). Verifica tu conexión.');
-      throw e;
-    }
+    const { GoogleGenerativeAI } = await import('https://esm.sh/@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(key);
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+    const result = await model.generateContent([
+      PROMPT,
+      { inlineData: { mimeType: 'image/jpeg', data: imageB64 } }
+    ]);
+    return result.response.text();
   }
 
   // ---- Voz ----
