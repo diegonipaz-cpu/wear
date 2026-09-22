@@ -166,6 +166,15 @@
   <video id="camera" autoplay playsinline muted></video>
   <canvas id="canvas"></canvas>
 
+  <!-- Pantalla de permiso de cámara -->
+  <div id="camera-prompt" style="display:none;position:absolute;inset:0;background:#0f0f0f;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:32px;z-index:10">
+    <div style="font-size:3rem">📷</div>
+    <p style="font-size:1.1rem;font-weight:700;text-align:center">Permiso de cámara requerido</p>
+    <p style="color:#9ca3af;font-size:0.9rem;text-align:center;line-height:1.5">La app necesita acceso a la cámara para funcionar. Pulsa el botón y acepta el permiso.</p>
+    <button onclick="startCamera()" style="padding:16px 32px;background:#3b82f6;color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer">Activar cámara</button>
+    <p style="color:#6b7280;font-size:0.78rem;text-align:center;line-height:1.5">Si no aparece el diálogo, ve a<br>Ajustes → Chrome → Permisos → Cámara → Permitir</p>
+  </div>
+
   <!-- Top bar -->
   <div id="top-bar">
     <button class="top-btn icon-only" onclick="resetKey()" title="Configuración">⚙️</button>
@@ -250,7 +259,11 @@
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
       video.srcObject = stream;
-    } catch (e) { setStatus('Sin cámara: ' + e.message); }
+      document.getElementById('camera-prompt').style.display = 'none';
+    } catch (e) {
+      document.getElementById('camera-prompt').style.display = 'flex';
+      setStatus('Sin acceso a cámara');
+    }
   }
 
   function captureFrame() {
