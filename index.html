@@ -250,7 +250,9 @@
       clearTimeout(timeout);
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || '(sin respuesta)';
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error('DEBUG: ' + JSON.stringify(data).slice(0, 300));
+      return text;
     } catch (e) {
       clearTimeout(timeout);
       if (e.name === 'AbortError') throw new Error('Tiempo agotado (30s). Verifica tu conexión.');
