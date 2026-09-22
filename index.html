@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Wearable AI</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #000;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      height: 100dvh;
+      overflow: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ---- Pantalla de configuración ---- */
+    #config-screen {
+      position: fixed; inset: 0;
+      background: #0f0f0f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      gap: 16px;
+      z-index: 200;
+    }
+    #config-screen h1 { font-size: 1.8rem; font-weight: 700; }
+    #config-screen .sub {
+      color: #6b7280;
+      font-size: 0.9rem;
+      text-align: center;
+      line-height: 1.5;
+    }
+    #config-screen a { color: #3b82f6; }
+    #api-key-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+    #api-key-input:focus { border-color: #3b82f6; }
+    #save-btn {
+      width: 100%;
+      padding: 16px;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #save-btn:active { background: #2563eb; }
+
+    /* ---- Vista principal ---- */
+    #main { display: none; height: 100dvh; position: relative; }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    canvas { display: none; }
+
+    /* Overlay inferior */
+    #overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 20px 36px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.88));
+    }
+
+    #response-text {
+      font-size: 1.05rem;
+      line-height: 1.55;
+      min-height: 3.5em;
+      margin-bottom: 18px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+    }
+
+    #analyze-btn {
+      width: 100%;
+      padding: 18px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      letter-spacing: 0.02em;
+    }
+    #analyze-btn:active { background: #2563eb; transform: scale(0.97); }
+    #analyze-btn:disabled { background: #1f2937; color: #6b7280; transform: none; }
+
+    #status-line {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      text-align: center;
+      margin-top: 10px;
+      min-height: 1em;
+    }
+
+    /* Indicador de grabando */
+    #recording-dot {
+      position: absolute;
+      top: 18px; right: 18px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: #ef4444;
+      display: none;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    /* Botón settings */
+    #settings-btn {
+      position: absolute;
+      top: 14px; left: 14px;
+      background: rgba(0,0,0,0.5);
+      border: none;
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Pantalla de configuración (primer uso) -->
+<div id="config-screen">
+  <h1>Wearable AI</h1>
+  <p class="sub">
+    Necesitas una API key gratuita de Google Gemini.<br>
+    Obtenla en <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a>
+  </p>
+  <input id="api-key-input" type="password" placeholder="Pega tu API key aquí (AIza...)" autocomplete="off" />
+  <button id="save-btn" onclick="saveKey()">Guardar y comenzar</button>
+  <p class="sub" style="font-size:0.75rem">
+    La key se guarda solo en tu teléfono, no se comparte con nadie.
+  </p>
+</div>
+
+<!-- Vista principal -->
+<div id="main">
+  <video id="camera" autoplay playsinline muted></video>
+  <canvas id="canvas"></canvas>
+  <div id="recording-dot"></div>
+  <button id="settings-btn" onclick="resetKey()" title="Cambiar API key">⚙️</button>
+  <div id="overlay">
+    <div id="response-text">Apunta la cámara y pulsa Analizar.</div>
+    <button id="analyze-btn" onclick="analyze()">Analizar</button>
+    <div id="status-line"></div>
+  </div>
+</div>
+
+<script>
+  const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  const PROMPT = 'Eres un asistente wearable. Describe brevemente en español lo que ves en 2-3 oraciones cortas y útiles. Sé directo y conciso.';
+
+  // ---- API Key ----
+  function saveKey() {
+    const key = document.getElementById('api-key-input').value.trim();
+    if (!key.startsWith('AIza')) {
+      alert('La API key no parece válida. Debe empezar con "AIza..."');
+      return;
+    }
+    localStorage.setItem('gemini_key', key);
+    document.getElementById('config-screen').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    startCamera();
+  }
+
+  function resetKey() {
+    if (confirm('¿Cambiar la API key?')) {
+      localStorage.removeItem('gemini_key');
+      location.reload();
+    }
+  }
+
+  // ---- Cámara ----
+  const video = document.getElementById('camera');
+  const canvas = document.getElementById('canvas');
+
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 } },
+        audio: false,
+      });
+      video.srcObject = stream;
+    } catch (e) {
+      setStatus('Sin acceso a cámara: ' + e.message);
+    }
+  }
+
+  function captureFrame() {
+    const w = video.videoWidth || 640;
+    const h = video.videoHeight || 480;
+    // Reducir a max 800px de ancho para agilizar la subida
+    const maxW = 800;
+    const scale = w > maxW ? maxW / w : 1;
+    canvas.width  = Math.round(w * scale);
+    canvas.height = Math.round(h * scale);
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', 0.75).split(',')[1];
+  }
+
+  // ---- Gemini API ----
+  async function callGemini(imageB64) {
+    const key = localStorage.getItem('gemini_key');
+    const res = await fetch(`${GEMINI_URL}?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: PROMPT },
+            { inline_data: { mime_type: 'image/jpeg', data: imageB64 } }
+          ]
+        }],
+        generationConfig: { maxOutputTokens: 200, temperature: 0.4 }
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '(sin respuesta)';
+  }
+
+  // ---- Voz ----
+  function speak(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'es-ES';
+    utt.rate = 1.05;
+    utt.pitch = 1;
+    window.speechSynthesis.speak(utt);
+  }
+
+  // ---- Flujo principal ----
+  const btn = document.getElementById('analyze-btn');
+  const responseDiv = document.getElementById('response-text');
+  const dot = document.getElementById('recording-dot');
+
+  function setStatus(msg) {
+    document.getElementById('status-line').textContent = msg;
+  }
+
+  async function analyze() {
+    btn.disabled = true;
+    btn.textContent = 'Analizando...';
+    dot.style.display = 'block';
+    setStatus('');
+    try {
+      const imageB64 = captureFrame();
+      const text = await callGemini(imageB64);
+      responseDiv.textContent = text;
+      speak(text);
+    } catch (e) {
+      const msg = '⚠ ' + e.message;
+      responseDiv.textContent = msg;
+      setStatus(msg);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Analizar';
+      dot.style.display = 'none';
+    }
+  }
+
+  // ---- Init ----
+  if (localStorage.getItem('gemini_key')) {
+    document.getElementById('config-screen').style.display = 'none';
+    document.getElementById('main').style.display = 'block';
+    startCamera();
+  }
+</script>
+</body>
+</html>
